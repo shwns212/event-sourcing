@@ -46,47 +46,47 @@ public class TestClass {
 	}
 	
 	
-	@Test
-	public void test() throws IllegalArgumentException, IllegalAccessException {
-		Event event = new Event("Product", "11", "ProductCreated", 1L, "{}", LocalDateTime.now());
-		
-		List<String> fieldList = new ArrayList<>();
-		List<Object> valueList = new ArrayList<>();
-		List<String> paramList = new ArrayList<>();
-		
-		Field[] fields = event.getClass().getDeclaredFields();
-		StringBuilder sb = new StringBuilder();
-		for(Field field : fields) {
-			field.setAccessible(true);
-			
-			System.out.println(field.getDeclaredAnnotation(org.springframework.data.annotation.Id.class));
-			System.out.println(field.getDeclaredAnnotation(Identifier.class));
-			
-			StringBuilder b = new StringBuilder(field.getName());
-			for(int i=0; i<b.length(); i++) {
-				if(Character.isUpperCase(b.charAt(i))) {
-					b.insert(i, "_");
-					i++;
-				};
-			}
-			
-			fieldList.add(b.toString().toLowerCase());
-			valueList.add(field.get(event));
-			paramList.add("?");
-		}
-		sb.append("insert into event ")
-		.append("(")
-		.append(String.join(",", fieldList))
-		.append(") ")
-		.append(" values")
-		.append("(")
-		.append(String.join(",",paramList))
-		.append(")");
-//		GenericExecuteSpec s = dbClient.sql(sb.toString());
-//		int cnt = 1;
-//		for(Object obj : valueList) {
-//			s.bind(cnt, obj);
-//			cnt++;
+//	@Test
+//	public void test() throws IllegalArgumentException, IllegalAccessException {
+//		Event event = new Event("Product", "11", "ProductCreated", 1L, "{}", LocalDateTime.now());
+//		
+//		List<String> fieldList = new ArrayList<>();
+//		List<Object> valueList = new ArrayList<>();
+//		List<String> paramList = new ArrayList<>();
+//		
+//		Field[] fields = event.getClass().getDeclaredFields();
+//		StringBuilder sb = new StringBuilder();
+//		for(Field field : fields) {
+//			field.setAccessible(true);
+//			
+//			System.out.println(field.getDeclaredAnnotation(org.springframework.data.annotation.Id.class));
+//			System.out.println(field.getDeclaredAnnotation(Identifier.class));
+//			
+//			StringBuilder b = new StringBuilder(field.getName());
+//			for(int i=0; i<b.length(); i++) {
+//				if(Character.isUpperCase(b.charAt(i))) {
+//					b.insert(i, "_");
+//					i++;
+//				};
+//			}
+//			
+//			fieldList.add(b.toString().toLowerCase());
+//			valueList.add(field.get(event));
+//			paramList.add("?");
 //		}
-	}
+//		sb.append("insert into event ")
+//		.append("(")
+//		.append(String.join(",", fieldList))
+//		.append(") ")
+//		.append(" values")
+//		.append("(")
+//		.append(String.join(",",paramList))
+//		.append(")");
+////		GenericExecuteSpec s = dbClient.sql(sb.toString());
+////		int cnt = 1;
+////		for(Object obj : valueList) {
+////			s.bind(cnt, obj);
+////			cnt++;
+////		}
+//	}
 }

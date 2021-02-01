@@ -108,14 +108,18 @@ public class EventService {
 			final Field idField = findIdentifierField(event.getClass());
 			
 			// aggregateType과 aggregateId로 가장 최근 이벤트를 조회한다.
-			Mono<Event> recentlyEvent = repo.findRecentlyEvent(aggregateTypeClass.getSimpleName()
-					, Optional.ofNullable((String) idField.get(event)).orElseGet(() -> ""));
+			// 첫 애그리거트 등록시에는 aggregateId가 null 이므로 빈 이벤트를 생성한다.
+			UUID aggregateId = (UUID) idField.get(event);
+			Mono<Event> recentlyEvent = aggregateId == null 
+					? Mono.just(new Event()) 
+					: repo.findRecentlyEvent(aggregateTypeClass.getSimpleName(), aggregateId);
+					
 			Mono<Event> result = recentlyEvent
 			.switchIfEmpty(Mono.just(new Event()))
 			.flatMap(x ->{
 				try {
 					// 식별자가 null이면 UUID로 값을 채운다. (처음 이벤트를 등록할때는 식별자가 없다.)
-					String newId = idField.get(event) == null ? UUID.randomUUID().toString() : (String) idField.get(event); 
+					UUID newId = idField.get(event) == null ? UUID.randomUUID() : (UUID) idField.get(event); 
 					idField.set(event, newId);
 					// 조회한 데이터의 버전에 +1을 한다.
 					Long version = Optional.ofNullable(x.getVersion()).orElseGet(() -> 0L) + 1;
@@ -124,7 +128,7 @@ public class EventService {
 					// 역직렬화가 가능한지 검사 불가능할 경우 catch로 빠짐
 					objectMapper.readValue(payload, Map.class);
 					// 값을 세팅하고
-					Event newEvent = new Event(aggregateTypeClass.getSimpleName(), newId
+					Event newEvent = new Event(UUID.randomUUID(), aggregateTypeClass.getSimpleName(), newId
 							, event.getClass().getSimpleName(), version, payload, LocalDateTime.now());
 					// 저장
 					Mono<Event> saveEvent = repo.save(newEvent);
@@ -161,7 +165,7 @@ public class EventService {
 					// 최신 상태의 애그리거트를 직렬화 한다.
 					String payload = objectMapper.writeValueAsString(data);
 					// 스냅샷 객체를 생성한다.
-					Snapshot newSnapshot = new Snapshot(event.getId(), aggregateTypeClass.getSimpleName(), event.getAggregateId()
+					Snapshot newSnapshot = new Snapshot(UUID.randomUUID(), event.getId(), aggregateTypeClass.getSimpleName(), event.getAggregateId()
 							,event.getVersion(), payload, LocalDateTime.now());
 					// 스냅샷 저장
 					srepo.save(newSnapshot).subscribe();
@@ -180,7 +184,7 @@ public class EventService {
 	 * @return
 	 */
 	@SuppressWarnings("unchecked")
-	public <T> Mono<T> findAggregate(Class<T> aggregateTypeClass, String aggregateId) {
+	public <T> Mono<T> findAggregate(Class<T> aggregateTypeClass, UUID aggregateId) {
 		// 가장 최근의 스냅샷을 조회한다.
 		return (Mono<T>) findAggregateAndVersion(aggregateTypeClass, aggregateId)
 				.map(x -> x.get(DATA_NAME));
@@ -193,7 +197,7 @@ public class EventService {
 	 * @param aggregateId
 	 * @return
 	 */
-	public <T> Mono<Map<String, Object>> findAggregateAndVersion(Class<T> aggregateTypeClass, String aggregateId) {
+	public <T> Mono<Map<String, Object>> findAggregateAndVersion(Class<T> aggregateTypeClass, UUID aggregateId) {
 		// 가장 최근의 스냅샷을 조회한다.
 		return srepo.findRecentlySnapshot(aggregateTypeClass.getSimpleName(), aggregateId)
 				.switchIfEmpty(Mono.just(new Snapshot()))

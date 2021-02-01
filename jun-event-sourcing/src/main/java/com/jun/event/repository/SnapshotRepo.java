@@ -1,5 +1,7 @@
 package com.jun.event.repository;
 
+import java.util.UUID;
+
 import org.springframework.r2dbc.core.DatabaseClient;
 
 import com.jun.event.db.QueryExecutor;
@@ -14,13 +16,12 @@ public class SnapshotRepo {
 		this.queryExecutor = new QueryExecutor(dbClient);
 	}
 	
-	public Mono<Snapshot> findRecentlySnapshot(String aggregateType, String aggregateId) {
+	public Mono<Snapshot> findRecentlySnapshot(String aggregateType, UUID aggregateId) {
 		String sql = "select * from snapshot where aggregate_type = :aggregateType and aggregate_id = :aggregateId order by version desc limit 1";
 		return queryExecutor.findOne(sql, Snapshot.class, aggregateType, aggregateId);
 	};
 	
 	public Mono<Snapshot> save(Snapshot snapshot) {
-		queryExecutor.save(snapshot);
-		return Mono.just(snapshot);
+		return queryExecutor.save(snapshot);
 	}
 }

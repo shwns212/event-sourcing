@@ -1,5 +1,7 @@
 package com.jun.event.repository;
 
+import java.util.UUID;
+
 import org.springframework.r2dbc.core.DatabaseClient;
 
 import com.jun.event.db.QueryExecutor;
@@ -15,12 +17,12 @@ public class EventRepo {
 		this.queryExecutor = new QueryExecutor(dbClient);
 	}
 
-	public Mono<Event> findRecentlyEvent(String aggregateType, String aggregateId){
+	public Mono<Event> findRecentlyEvent(String aggregateType, UUID aggregateId){
 		String sql = "select * from event where aggregate_type = :aggregateType and aggregate_id = :aggregateId order by version desc limit 1";
 		return queryExecutor.findOne(sql, Event.class, aggregateType, aggregateId);
 	};
 	
-	public Flux<Event> findAfterSnapshotEvents(String aggregateType, String aggregateId, Long version){
+	public Flux<Event> findAfterSnapshotEvents(String aggregateType, UUID aggregateId, Long version){
 		String sql = "select * from event where aggregate_type = :aggregateType and aggregate_id = :aggregateId and version > :version order by version";
 		return queryExecutor.findAll(sql, Event.class, aggregateType, aggregateId, version);
 	};

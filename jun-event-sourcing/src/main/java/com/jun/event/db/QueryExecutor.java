@@ -7,10 +7,12 @@ import java.util.Map;
 import java.util.function.Function;
 
 import org.reactivestreams.Publisher;
-import org.springframework.data.annotation.Id;
+import org.springframework.data.relational.core.mapping.Table;
 import org.springframework.r2dbc.core.DatabaseClient;
 import org.springframework.r2dbc.core.DatabaseClient.GenericExecuteSpec;
+import org.springframework.r2dbc.core.Parameter;
 
+import com.jun.event.exception.FailedEventSaveException;
 import com.jun.event.util.ExtStringUtils;
 
 import reactor.core.publisher.Flux;
@@ -25,32 +27,28 @@ public class QueryExecutor {
 	}
 
 	public <T> Mono<T> save(T entity) {
-		List<String> columnList = new ArrayList<>(); // insert into (...) 에 들어갈 컬럼명 리스트
+		String tableName = entity.getClass().getDeclaredAnnotation(Table.class).value(); // 테이블명
+		List<String> columnList = new ArrayList<>(); // insert into table (...) 에 들어갈 컬럼명 리스트
 		List<String> paramList = new ArrayList<>(); // values (...) 에 들어갈 바인드 파라미터명 리스트
 		List<Object> valueList = new ArrayList<>(); // 실제 파라미터 값 리스트
 		
 		Field[] fields = entity.getClass().getDeclaredFields();
+		
+		// 컬럼명, 파라미터명, 값 채우기
 		for(Field field : fields) {
-			field.setAccessible(true);
-			if(field.getDeclaredAnnotation(Id.class) != null) {
-				continue;
-			}
-			
-			// camelCase -> underScore
-			columnList.add(ExtStringUtils.camelCaseToUnderScore(field.getName()));
-			
 			try {
+				field.setAccessible(true);
+				columnList.add(ExtStringUtils.camelCaseToUnderScore(field.getName()));
+				paramList.add(":"+field.getName());
 				valueList.add(field.get(entity));
 			} catch (IllegalArgumentException | IllegalAccessException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
+				throw new FailedEventSaveException(e);
 			}
-			paramList.add(":"+field.getName());
 		}
 		
 		// 쿼리 생성
 		String sql =  new StringBuilder()
-		.append("insert into event (")
+		.append("insert into ").append(tableName).append(" (")
 		.append(String.join(",", columnList))
 		.append(") values (")
 		.append(String.join(",",paramList))
@@ -68,6 +66,8 @@ public class QueryExecutor {
 			}
 			i++;
 		}
+		
+		// 등록된 엔티티 반환
 		return (Mono<T>) genericExecuteSpec.fetch()
 				.rowsUpdated()
 				.thenReturn(entity);

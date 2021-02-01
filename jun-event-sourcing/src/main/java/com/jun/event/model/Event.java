@@ -1,18 +1,17 @@
 package com.jun.event.model;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Table;
 
-import com.jun.event.annotation.Identifier;
-
 @Table("event")
 public class Event {
 	@Id
-	private Long id;
+	private UUID id;
 	private String aggregateType;
-	private String aggregateId;
+	private UUID aggregateId;
 	private String eventType;
 	private Long version;
 	private String payload;
@@ -20,8 +19,9 @@ public class Event {
 	
 	public Event() {}
 	
-	public Event(String aggregateType, String aggregateId, String eventType, Long version, String payload,
+	public Event(UUID id, String aggregateType, UUID aggregateId, String eventType, Long version, String payload,
 			LocalDateTime createdAt) {
+		this.id = id;
 		this.aggregateType = aggregateType;
 		this.aggregateId = aggregateId;
 		this.eventType = eventType;
@@ -97,7 +97,7 @@ public class Event {
 		return true;
 	}
 
-	public Long getId() {
+	public UUID getId() {
 		return id;
 	}
 
@@ -105,7 +105,7 @@ public class Event {
 		return aggregateType;
 	}
 
-	public String getAggregateId() {
+	public UUID getAggregateId() {
 		return aggregateId;
 	}
 

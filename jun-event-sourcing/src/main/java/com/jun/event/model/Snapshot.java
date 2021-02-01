@@ -1,6 +1,7 @@
 package com.jun.event.model;
 
 import java.time.LocalDateTime;
+import java.util.UUID;
 
 import org.springframework.data.annotation.Id;
 import org.springframework.data.relational.core.mapping.Table;
@@ -8,18 +9,19 @@ import org.springframework.data.relational.core.mapping.Table;
 @Table("snapshot")
 public class Snapshot {
 	@Id
-	private Long id;
-	private Long eventId;
+	private UUID id;
+	private UUID eventId;
 	private String aggregateType;
-	private String aggregateId;
+	private UUID aggregateId;
 	private Long version;
 	private String payload;
 	private LocalDateTime createdAt;
 	
 	public Snapshot() {}
 	
-	public Snapshot(Long eventId, String aggregateType, String aggregateId, Long version, String payload,
+	public Snapshot(UUID id, UUID eventId, String aggregateType, UUID aggregateId, Long version, String payload,
 			LocalDateTime createdAt) {
+		this.id = id;
 		this.eventId = eventId;
 		this.aggregateType = aggregateType;
 		this.aggregateId = aggregateId;
@@ -28,11 +30,11 @@ public class Snapshot {
 		this.createdAt = createdAt;
 	}
 
-	public Long getId() {
+	public UUID getId() {
 		return id;
 	}
 
-	public Long getEventId() {
+	public UUID getEventId() {
 		return eventId;
 	}
 
@@ -40,7 +42,7 @@ public class Snapshot {
 		return aggregateType;
 	}
 
-	public String getAggregateId() {
+	public UUID getAggregateId() {
 		return aggregateId;
 	}
 
