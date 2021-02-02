@@ -123,14 +123,18 @@ public class QueryExecutor {
 	private <T> Publisher<T> execute(String sql, Class<T> clazz, Function<GenericExecuteSpec, Publisher<T>> function, Object... params) {
 		int paramIndex = 0;
 		List<String> paramList = new ArrayList<>();
+		
+		// where param = '{name:test}' 일 경우 :test를 쿼리 파라미터로 인식하므로 정규식으로 제거 -> param = '' 으로 치환한다.
+		String replaceSql = sql.replaceAll("('([^ ]+)')", "''");
+		
 		while(true) {
-			paramIndex = sql.indexOf(":",paramIndex+1); // 예) :parameter 
+			paramIndex = replaceSql.indexOf(":",paramIndex+1); // 예) :parameter 
 			
 			if(paramIndex == -1) break; // 파라미터가 더이상 존재하지 않으면 break;
 			
-			int spaceIndex = sql.indexOf(" ", paramIndex+1); // : 부터 공백까지 단어
+			int spaceIndex = replaceSql.indexOf(" ", paramIndex+1); // : 부터 공백까지 단어
 			
-			paramList.add(sql.substring(paramIndex+1, spaceIndex)); // 파라미터 리스트에 추가
+			paramList.add(replaceSql.substring(paramIndex+1, spaceIndex)); // 파라미터 리스트에 추가
 		}
 		
 		GenericExecuteSpec genericExecuteSpec = dbClient.sql(sql);

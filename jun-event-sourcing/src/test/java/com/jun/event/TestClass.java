@@ -13,7 +13,7 @@ import com.jun.event.model.Event;
 
 public class TestClass {
 
-	@Test
+//	@Test
 	public void test3() {
 		StringBuilder sb = new StringBuilder("ag_id_no");
 		StringBuilder newSb = new StringBuilder();
@@ -28,10 +28,22 @@ public class TestClass {
 		System.out.println(newSb);
 	}
 	
-//	@Test
+	@Test
 	public void test2() {
-		String sql = "select * from event where aggregate_type = :aggregateType and aggregate_id = :aggregateId order by version desc limit 1";
+		String sql = "select * from event where aggregate_type = :aggregateType and aggregate_id = :aggregateId name = '{name:'aa'}' hh= :aa and age = '''''''11:11'' order by version desc limit 1";
 		int paramIndex = 0;
+		int g = sql.indexOf("'");
+		StringBuilder b = new StringBuilder(sql);
+		String s = "<div> aa </div> <div> fff</div>";
+		System.out.println(sql.replaceAll("('([^ ]+)')", "''"));
+		sql = sql.replaceAll("('([^>]+)')", "");
+//		b.delete(g+1, sql.indexOf("'", g+1));
+//		System.out.println(b.toString());
+//		System.out.println(g);
+//		System.out.println(sql.indexOf("'", g+1));
+		
+		
+		
 		List<String> param = new ArrayList<>();
 		while(true) {
 			paramIndex = sql.indexOf(":",paramIndex+1);
