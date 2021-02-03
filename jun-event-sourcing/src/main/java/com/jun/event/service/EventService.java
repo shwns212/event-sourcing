@@ -250,30 +250,33 @@ public class EventService {
 	public <T> T eventReplay(List<Event> eventList, T aggregate) {
 		// 이벤트를 돌면서 최신상태 채우기
 		for(Event event : eventList) {
-			// aggregate 생성
 			try {
 				boolean isExistEventType = false; // 이벤트 타입이 이벤트 스토어와 이벤트 핸들러 둘 다 존재하는지 체크 (중간에 이벤트 타입명을 변경하였을 경우)
 				Method[] methods = aggregate.getClass().getDeclaredMethods();
 				for(Method method : methods) {
 					method.setAccessible(true);
-					Annotation[] annotations = method.getDeclaredAnnotations();
-					for(Annotation annotation : annotations) {
-						if(annotation.annotationType().equals(EventHandler.class)) {
-							if(method.getParameterCount() > 1) throw new NotOneParameterException();
-							if(method.getParameterCount() == 0) throw new NotExistEventParameterException();
-							Class<?> eventClass = ((EventHandler) annotation).eventClass();
-							System.out.println("===============================");
-							System.out.println("===============================");
-							System.out.println("===============================");
-							System.out.println("===============================");
-							System.out.println(eventClass);
-							System.out.println(event);
-							if(event.getEventType().equals(eventClass.getSimpleName())) {
-								isExistEventType = true;
-								method.invoke(aggregate, objectMapper.readValue(event.getPayload(), eventClass));
-							}
+					EventHandler annotation = method.getDeclaredAnnotation(EventHandler.class);
+					if(annotation != null) {
+						if(method.getParameterCount() > 1) throw new NotOneParameterException();
+						if(method.getParameterCount() == 0) throw new NotExistEventParameterException();
+						Class<?> eventClass = annotation.eventClass();
+						if(event.getEventType().equals(eventClass.getSimpleName())) {
+							isExistEventType = true;
+							method.invoke(aggregate, objectMapper.readValue(event.getPayload(), eventClass));
 						}
 					}
+//					Annotation[] annotations = method.getDeclaredAnnotations();
+//					for(Annotation annotation : annotations) {
+//						if(annotation.annotationType().equals(EventHandler.class)) {
+//							if(method.getParameterCount() > 1) throw new NotOneParameterException();
+//							if(method.getParameterCount() == 0) throw new NotExistEventParameterException();
+//							Class<?> eventClass = ((EventHandler) annotation).eventClass();
+//							if(event.getEventType().equals(eventClass.getSimpleName())) {
+//								isExistEventType = true;
+//								method.invoke(aggregate, objectMapper.readValue(event.getPayload(), eventClass));
+//							}
+//						}
+//					}
 				}
 				String msg = "The event type '"+event.getEventType()+"' is not exist in class '"
 						+aggregate.getClass().getSimpleName()+"'";
